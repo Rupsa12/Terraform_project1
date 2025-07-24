@@ -1,0 +1,46 @@
+>>> here we will use variable for 
+	1. region
+	2. ami (mentioned as ami-map)
+
+>>> the default value for region is here "us-east-1"
+
+>>> in terraform.tfvars file we will only give extra value for region variable "us-west-2"
+
+>>> for another variable "ami-map"
+	1. we are using here the type of variable map(string) [map(string) is a type of datatype] which is required for lookup function
+	2. variable "ami_map" {
+  				type = map(string)
+  				default = {
+    				"us-east-1"     = "ami-0c55b159cbfafe1f0"
+    				"us-west-2"     = "ami-0abcdef1234567890"
+    				"eu-central-1"  = "ami-0c1234abcd5678efg"
+  				}
+
+>>> Now, come to the main.tf file. 
+		
+	1. provider "aws" {
+  				region = var.region     ... [now if we run this which value it will take? here we need to think of variable precedence, value of .tfvars > default value]
+  				access_key = "xyz"
+  				secret_key = "xyz"
+			   }
+
+	
+
+	2. resource "aws_instance" "web" {
+  						ami = lookup(var.ami_map, var.region, "ami-defaultfallback")
+  						instance_type = "t2.micro"
+
+ 						 tags = {
+    							Name = "WebServer-${var.region}"
+  							}
+					}
+		
+		now, here the lookup function syntax is lookup({map,key,default value})
+					so map here = go to point no.2
+
+
+>>>>>>> so output calculated here is
+		1. for lookup function, var.ami_map = go to point no.2  
+		2. key = "us-west-2" [variable precedence, value of .tfvars > default value]
+		3. "ami-defaultfallback" = its not executed cause the var.region value present in Map variable. 
+			if, you give it other than any of those three regions i.e "ap-south-1" , it will give "ami-defaultfallback" as an output.
